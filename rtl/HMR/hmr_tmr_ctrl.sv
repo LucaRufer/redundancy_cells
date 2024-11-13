@@ -71,7 +71,6 @@ module hmr_tmr_ctrl #(
   tmr_mode_e tmr_red_mode_d, tmr_red_mode_q;
 
   assign grp_in_independent_o = tmr_red_mode_q == NON_TMR;
-  assign tmr_resynch_req_o = tmr_red_mode_q == TMR_UNLOAD;
   assign rapid_recovery_en_o = tmr_reg2hw.tmr_config.rapid_recovery.q & RapidRecovery;
 
   assign sw_synch_req_o = synch_req & ~synch_req_sent_q;
@@ -133,7 +132,6 @@ module hmr_tmr_ctrl #(
 
         // If error detected, do resynchronization
         if (tmr_single_mismatch_i) begin
-          $display("[HMR-triple] %t - mismatch detected", $realtime);
           if (tmr_error_i[0]) tmr_incr_mismatches_o[0] = 1'b1;
           if (tmr_error_i[1]) tmr_incr_mismatches_o[1] = 1'b1;
           if (tmr_error_i[2]) tmr_incr_mismatches_o[2] = 1'b1;
@@ -217,6 +215,14 @@ module hmr_tmr_ctrl #(
           end
           tmr_red_mode_d = NON_TMR;
         end
+      end
+    end
+  end
+
+  always_ff @(posedge clk_i) begin : print_mismatch
+    if(!rst_ni) begin
+      if (tmr_single_mismatch_i) begin
+        $display("[HMR-triple] %t - mismatch detected", $realtime);
       end
     end
   end
